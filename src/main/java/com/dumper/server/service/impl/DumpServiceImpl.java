@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.HashMap;
 
+// todo: убрать ссылку после ознакомления
 // https://docs.microsoft.com/ru-ru/sql/t-sql/statements/backup-transact-sql?view=sql-server-ver15
 @Slf4j
 @RequiredArgsConstructor
@@ -24,6 +25,12 @@ public class DumpServiceImpl implements DumpService {
     @Value(value = "${spring.datasource.password:password}")
     private String password;
 
+    @Value(value = "${server:localhost}")
+    private String server;
+
+    @Value(value = "${database.name:TestDB}")
+    private String database;
+
     @Value(value = "${directory:directory}")
     private String directory;
 
@@ -33,10 +40,16 @@ public class DumpServiceImpl implements DumpService {
     public void executeCommand(String command) {
         Runtime runtime = Runtime.getRuntime();
         try {
-            Process process = runtime.exec(command);
+            log.info("Start executing command: " + command);
+            runtime.exec(command);
         } catch (IOException e) {
-            log.error(e.getLocalizedMessage());
+            log.error("Error during process: " + e.getLocalizedMessage());
         }
+    }
+
+    public void executeFullDump(String filename) {
+        Command command = getBaseCommand(filename);
+        executeCommand(getDumpCommand.handle(command).getCommand());
     }
 
     @FunctionalInterface
@@ -113,5 +126,21 @@ public class DumpServiceImpl implements DumpService {
     static class Command {
         private String command = BASE_COMMAND;
         private HashMap<String, String> params;
+    }
+
+    private Command getBaseCommand(String filename) {
+        Command command = new Command();
+        command.setParams(new HashMap<String, String>() {{
+            put("directory", directory);
+            put("database", database);
+            put("filename", filename);
+            put("-P", password);
+            put("-U", username);
+            put("-S", server);
+        }});
+
+        log.info("Created command with params: ", command.getParams().get("directory"));
+
+        return command;
     }
 }

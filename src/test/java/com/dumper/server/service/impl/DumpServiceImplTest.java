@@ -15,7 +15,8 @@ import java.util.HashMap;
 @DirtiesContext
 class DumpServiceImplTest {
 
-    //sqlcmd -S localhost -U SA -P Postgres1 -Q "BACKUP DATABASE [TestDB] TO DISK = N'/home/tcen/dumps/backup.bck' WITH NOFORMAT, NOINIT, NAME = 'demodb-full', SKIP, NOREWIND, NOUNLOAD, STATS = 10"
+    // examples:
+    // sqlcmd -S localhost -U SA -P Postgres1 -Q "BACKUP DATABASE [TestDB] TO DISK = N'/home/tcen/dumps/backup.bck' WITH NOFORMAT, NOINIT, NAME = 'demodb-full', SKIP, NOREWIND, NOUNLOAD, STATS = 10"
     // sqlcmd -S localhost -U SA -P Postgres1
     // sqlcmd -S localhost -U SA -P Postgres1 -Q "RESTORE DATABASE [TestDB] FROM DISK = N'/home/tcen/dumps/backup.bck'"
 
