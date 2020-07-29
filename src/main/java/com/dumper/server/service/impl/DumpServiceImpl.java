@@ -52,7 +52,7 @@ public class DumpServiceImpl implements DumpService {
             proc.waitFor();
             InputStream errorStream = proc.getErrorStream();
             String errors = IOUtils.toString(errorStream, StandardCharsets.UTF_8);
-            if(!errors.isEmpty()) {
+            if (!errors.isEmpty()) {
                 log.error("errors: " + errors);
             }
         } catch (Exception e) {
@@ -87,12 +87,14 @@ public class DumpServiceImpl implements DumpService {
         private HashMap<String, String> params;
     }
 
-    private static void setQuery(Command command, Query query) {
-        String result = query.getQuery().replace(DATABASE_KEY.getKey(), command.getParams().get(DATABASE_KEY.getKey()))
+    private void setQuery(Command command, Query query) {
+        command.getParams().put(QUERY_KEY.getKey(), getQueryWithParams(command, query));
+    }
+
+    private String getQueryWithParams(Command command, Query query) {
+        return query.getQuery().replace(DATABASE_KEY.getKey(), command.getParams().get(DATABASE_KEY.getKey()))
                 .replace(DIRECTORY_KEY.getKey(), command.getParams().get(DIRECTORY_KEY.getKey()) +
                         command.getParams().get(FILENAME_KEY.getKey()));
-
-        command.getParams().put(QUERY_KEY.getKey(), result);
     }
 
     public Command getBaseCommand(String filename) {
