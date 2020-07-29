@@ -4,11 +4,12 @@ import com.dumper.server.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 @Slf4j
@@ -20,8 +21,9 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public InputStreamResource getDump(String name) throws IOException {
-        ClassPathResource dumpFile = new ClassPathResource(directory + name);
-
-        return new InputStreamResource(dumpFile.getInputStream());
+        try (InputStream dumpFile = new FileInputStream(directory + name)) {
+            log.info("Getting file: " + directory + name);
+            return new InputStreamResource(dumpFile);
+        }
     }
 }
