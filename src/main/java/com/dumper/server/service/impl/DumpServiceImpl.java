@@ -51,7 +51,10 @@ public class DumpServiceImpl implements DumpService {
             Process proc = runtime.exec(command);
             proc.waitFor();
             InputStream errorStream = proc.getErrorStream();
+            InputStream outStream = proc.getInputStream();
             String errors = IOUtils.toString(errorStream, StandardCharsets.UTF_8);
+            String out = IOUtils.toString(outStream, StandardCharsets.UTF_8);
+            log.info("out: " + out);
             if (!errors.isEmpty()) {
                 log.error("errors: " + errors);
             }
@@ -60,6 +63,25 @@ public class DumpServiceImpl implements DumpService {
         }
     }
 
+    @Override
+    public void executeRestoreFullDump(String filename) {
+        Command command = getBaseCommand(filename);
+
+        setQuery(command, Query.RESTORE);
+
+        executeCommand(getCommands(command));
+    }
+
+    @Override
+    public void executeRestoreDifferentialDump(String filename) {
+        Command command = getBaseCommand(filename);
+
+        setQuery(command, Query.RESTORE_DIFFERENTIAL);
+
+        executeCommand(getCommands(command));
+    }
+
+    @Override
     public void executeFullDump(String filename) {
         Command command = getBaseCommand(filename);
 
@@ -68,7 +90,16 @@ public class DumpServiceImpl implements DumpService {
         executeCommand(getCommands(command));
     }
 
-    private String[] getCommands(Command command) {
+    @Override
+    public void executeDifferentialDump(String filename) {
+        Command command = getBaseCommand(filename);
+
+        setQuery(command, Query.DIFFERENTIAL_BACKUP);
+
+        executeCommand(getCommands(command));
+    }
+
+    public String[] getCommands(Command command) {
         List<String> result = new ArrayList<>();
         result.add(BASE_COMMAND);
 
