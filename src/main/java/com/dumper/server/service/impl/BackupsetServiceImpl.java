@@ -2,6 +2,7 @@ package com.dumper.server.service.impl;
 
 import com.dumper.server.entity.Backupset;
 import com.dumper.server.entity.BackupsetTest;
+import com.dumper.server.entity.Dump;
 import com.dumper.server.repository.BackupsetRepository;
 import com.dumper.server.service.BackupsetService;
 import com.fasterxml.jackson.databind.ObjectMapper;

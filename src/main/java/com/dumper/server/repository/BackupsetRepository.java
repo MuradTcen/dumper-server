@@ -11,4 +11,6 @@ import java.util.List;
 @Repository
 public interface BackupsetRepository extends JpaRepository<BackupsetTest, Long> {
     List<Backupset> getAllByDatabaseNameAndBackupStartDateAfter(String databaseName, LocalDateTime backupStartDate);
+
+    List<Backupset> getAllByDatabaseNameAndBackupStartDateAfterAndOrderByDatabaseBackupLsnAsc(String databaseName, LocalDateTime backupStartDate);
 }

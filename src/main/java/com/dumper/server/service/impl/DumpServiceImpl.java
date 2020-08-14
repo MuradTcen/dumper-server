@@ -1,5 +1,6 @@
 package com.dumper.server.service.impl;
 
+import com.dumper.server.entity.Dump;
 import com.dumper.server.enums.Query;
 import com.dumper.server.service.DumpService;
 import lombok.Data;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -143,5 +145,9 @@ public class DumpServiceImpl implements DumpService {
         log.info("Created command with params: " + command.getParams());
 
         return command;
+    }
+
+    public List<Dump> getDumpsByDate(LocalDate date) {
+        return null;
     }
 }
