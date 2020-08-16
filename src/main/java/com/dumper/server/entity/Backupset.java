@@ -1,6 +1,5 @@
 package com.dumper.server.entity;
 
-import com.sun.source.doctree.SerialDataTree;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
