@@ -1,7 +1,9 @@
 package com.dumper.server.service.impl;
 
 import com.dumper.server.entity.Dump;
+import com.dumper.server.entity.Type;
 import com.dumper.server.enums.Query;
+import com.dumper.server.repository.BackupsetRepository;
 import com.dumper.server.service.DumpService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -11,12 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.dumper.server.enums.Key.*;
 
@@ -43,6 +46,8 @@ public class DumpServiceImpl implements DumpService {
     private String directory;
 
     private final static String BASE_COMMAND = "/opt/mssql-tools/bin/sqlcmd";
+
+    private final BackupsetRepository repository;
 
     @Override
     public void executeCommand(String[] command) {
@@ -147,7 +152,73 @@ public class DumpServiceImpl implements DumpService {
         return command;
     }
 
-    public List<Dump> getDumpsByDate(LocalDate date) {
-        return null;
+    @Override
+    public List<Dump> getActualDumpsByDatabaseName(String databaseName) {
+        return getFilteredDumps(getDumpsByDate(databaseName));
     }
+
+    @Override
+    public List<Dump> getDumpsByDate(String databaseName) {
+        return repository.getDumpsByDatabaseAndDate(databaseName)
+                .stream()
+                .map(d -> new Dump((BigDecimal) d[0],
+                        (BigDecimal) d[1],
+                        (BigDecimal) d[2],
+                        (BigDecimal) d[3],
+                        (String) d[4],
+                        (char) d[5])
+                )
+                .sorted(Dump::compareByLastLsn)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Dump> getFilteredDumps(List<Dump> dumps) {
+        List<Dump> result = new ArrayList<>();
+
+        result.add(getFullDump(dumps));
+        Dump differentialDump = getDifferentialDump(dumps);
+        result.add(differentialDump);
+
+        List<Dump> logs = dumps.stream()
+                .filter(d -> d.getType() == Type.L.getName())
+                .collect(Collectors.toList());
+
+        result.addAll(getFilteredTransactionalLog(logs, differentialDump));
+
+        return result;
+    }
+
+    @Override
+    public Dump getFullDump(List<Dump> dumps) {
+        return dumps.stream()
+                .filter(d -> d.getType() == Type.D.getName())
+                .findAny().orElseGet(null);
+    }
+
+    @Override
+    public Dump getDifferentialDump(List<Dump> dumps) {
+        return dumps.stream()
+                .filter(d -> d.getType() == Type.I.getName())
+                .max(Dump::compareByLastLsn)
+                .orElseGet(null);
+    }
+
+    @Override
+    public List<Dump> getFilteredTransactionalLog(List<Dump> logs, Dump differentialDump) {
+        List<Dump> result = new ArrayList<>();
+
+        if (differentialDump != null && differentialDump.getLastLsn().equals(logs.get(0).getFirstLsn())) {
+            // todo: подумать можно ли сделать лучше и вопрос гарантии порядка после фильтрации и
+            //  переписать так чтобы не требовалась проверка на null
+            for (int i = 0; i < logs.size() - 1; i++) {
+                if (logs.get(i).getLastLsn().equals(logs.get(i + 1).getFirstLsn())) {
+                    result.add(logs.get(i));
+                }
+            }
+        }
+
+        return result;
+    }
+
 }
