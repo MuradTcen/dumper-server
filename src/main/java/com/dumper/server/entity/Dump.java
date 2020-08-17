@@ -21,7 +21,8 @@ public class Dump {
     }
 
     public static Dump of(Object[] object) {
-        return new Dump((BigDecimal) object[0],
+        return new Dump(
+                (BigDecimal) object[0],
                 (BigDecimal) object[1],
                 (BigDecimal) object[2],
                 (BigDecimal) object[3],
