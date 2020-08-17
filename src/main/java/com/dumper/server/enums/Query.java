@@ -8,10 +8,15 @@ import lombok.RequiredArgsConstructor;
 public enum Query {
 
     VERSION("SELECT @@VERSION"),
+
     FULL_BACKUP("BACKUP DATABASE [database] TO DISK = N'directory' WITH COPY_ONLY, STATS = 10"),
     DIFFERENTIAL_BACKUP("BACKUP DATABASE [database] TO DISK = N'directory' WITH DIFFERENTIAL, STATS = 10"),
-    RESTORE("RESTORE DATABASE [database] FROM DISK = N'directory' WITH REPLACE"),
-    RESTORE_DIFFERENTIAL("RESTORE DATABASE [database] FROM DISK = N'directory' WITH NORECOVERY");
+
+    RESTORE_FULL("RESTORE DATABASE [database] FROM DISK = N'directory' WITH REPLACE"),
+    RESTORE_DIFFERENTIAL("RESTORE DATABASE [database] FROM DISK = N'directory' WITH NORECOVERY"),
+
+    LOG_BACKUP("BACKUP LOG [database] TO DISK = N'directory' WITH NOFORMAT, INIT, STATS = 10"),
+    RESTORE_LOG("RESTORE LOG [database] FROM DISK = N'directory' WITH STATS = 10");
 
     private final String query;
 }
