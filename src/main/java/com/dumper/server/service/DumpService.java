@@ -1,11 +1,16 @@
 package com.dumper.server.service;
 
 import com.dumper.server.entity.Dump;
+import com.dumper.server.enums.Query;
 
 import java.util.List;
 
 public interface DumpService {
     void executeCommand(String[] command);
+
+    int getVersion();
+
+    void executeQuery(String filename, Query query);
 
     List<Dump> getActualDumpsByDatabaseName(String databaseName);
 

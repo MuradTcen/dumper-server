@@ -1,7 +1,7 @@
 package com.dumper.server.service.impl;
 
 import com.dumper.server.entity.Dump;
-import com.dumper.server.entity.Type;
+import com.dumper.server.enums.Type;
 import com.dumper.server.enums.Query;
 import com.dumper.server.repository.BackupsetRepository;
 import com.dumper.server.service.DumpService;
@@ -71,6 +71,7 @@ public class DumpServiceImpl implements DumpService {
         }
     }
 
+    @Override
     public int getVersion() {
         String version = repository.getVersion();
 
@@ -80,12 +81,10 @@ public class DumpServiceImpl implements DumpService {
         return matcher.find() ? Integer.parseInt(matcher.group().split(" ")[1]) : -1;
     }
 
-    // todo: попробовать отрефакторить
+    @Override
     public void executeQuery(String filename, Query query) {
         Command command = getBaseCommand(filename);
-
         setQuery(command, query);
-
         executeCommand(getCommands(command));
     }
 

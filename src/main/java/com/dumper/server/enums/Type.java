@@ -1,4 +1,4 @@
-package com.dumper.server.entity;
+package com.dumper.server.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
