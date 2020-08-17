@@ -36,7 +36,7 @@ public class DumpController {
     private final static String DIFFERENTIAL_POSTFIX = "_differential.bck";
 
     @GetMapping(path = "version")
-    public ResponseEntity<Integer> getVersion() throws IOException {
+    public ResponseEntity<Integer> getVersion() {
         return ResponseEntity
                 .ok()
                 .body(dumpService.getVersion());
@@ -73,24 +73,6 @@ public class DumpController {
             // todo: исправить!
             return null;
         }
-    }
-
-    @GetMapping(path = "restore")
-    public ResponseEntity<String> restoreFullDump() {
-        String filename = LocalDate.now() + FULL_POSTFIX;
-        dumpService.executeQuery(filename, Query.RESTORE);
-
-        return ResponseEntity
-                .ok().body("Full dump restored");
-    }
-
-    @GetMapping(path = "restore-diff")
-    public ResponseEntity<String> restoreDifferentialDump() {
-        String filename = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH")) + DIFFERENTIAL_POSTFIX;
-        dumpService.executeQuery(filename, Query.RESTORE);
-
-        return ResponseEntity
-                .ok().body("Differential dump restored");
     }
 
     @GetMapping(path = "list")
