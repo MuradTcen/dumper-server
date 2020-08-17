@@ -171,6 +171,7 @@ public class DumpServiceImpl implements DumpService {
 
         result.addAll(getFilteredTransactionalLog(logs, differentialDump));
 
+        log.info("Received filtered dumps: " + Arrays.toString(result.toArray()));
         return result;
     }
 
@@ -194,17 +195,23 @@ public class DumpServiceImpl implements DumpService {
     public List<Dump> getFilteredTransactionalLog(List<Dump> logs, Dump differentialDump) {
         List<Dump> result = new ArrayList<>();
 
-        if (differentialDump != null && differentialDump.getLastLsn().equals(logs.get(0).getFirstLsn())) {
+        if (differentialDump != null && logs.size() > 1) {
             // todo: подумать можно ли сделать лучше и вопрос гарантии порядка после фильтрации и
             //  переписать так чтобы не требовалась проверка на null
-            for (int i = 0; i < logs.size() - 1; i++) {
-                if (logs.get(i).getLastLsn().equals(logs.get(i + 1).getFirstLsn())) {
+            for (int i = 0; i < logs.size(); i++) {
+                if (isCorrectPrevChainToNextByI(logs, i)) {
                     result.add(logs.get(i));
                 }
             }
         }
 
         return result;
+    }
+
+    @Override
+    public boolean isCorrectPrevChainToNextByI(List<Dump> logs, int i) {
+        return i < logs.size() - 1 && logs.get(i).getLastLsn().equals(logs.get(i + 1).getFirstLsn()) ||
+                i == logs.size() - 1 && logs.get(i).getFirstLsn().equals(logs.get(i - 1).getLastLsn());
     }
 
 }

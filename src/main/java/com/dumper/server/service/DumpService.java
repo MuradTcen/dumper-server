@@ -23,4 +23,6 @@ public interface DumpService {
     Dump getDifferentialDump(List<Dump> dumps);
 
     List<Dump> getFilteredTransactionalLog(List<Dump> logs, Dump differentialDump);
+
+    boolean isCorrectPrevChainToNextByI(List<Dump> logs, int i);
 }
