@@ -7,17 +7,9 @@ import java.util.List;
 public interface DumpService {
     void executeCommand(String[] command);
 
-    void executeRestoreFullDump(String filename);
-
-    void executeRestoreDifferentialDump(String filename);
-
-    void executeFullDump(String filename);
-
-    void executeDifferentialDump(String filename);
-
     List<Dump> getActualDumpsByDatabaseName(String databaseName);
 
-    List<Dump> getDumpsByDate(String databaseName);
+    List<Dump> getDumps(String databaseName);
 
     List<Dump> getFilteredDumps(List<Dump> dumps);
 

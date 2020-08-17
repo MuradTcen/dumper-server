@@ -1,10 +1,9 @@
 package com.dumper.server.controller;
 
 import com.dumper.server.entity.Dump;
+import com.dumper.server.enums.Query;
 import com.dumper.server.service.FileStorageService;
 import com.dumper.server.service.impl.DumpServiceImpl;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -37,13 +35,17 @@ public class DumpController {
     private final static String FULL_POSTFIX = "_full.bck";
     private final static String DIFFERENTIAL_POSTFIX = "_differential.bck";
 
-    @Value(value = "${api.server.url}")
-    private String url;
+    @GetMapping(path = "version")
+    public ResponseEntity<Integer> getVersion() throws IOException {
+        return ResponseEntity
+                .ok()
+                .body(dumpService.getVersion());
+    }
 
     @GetMapping(produces = MediaType.ALL_VALUE)
     public ResponseEntity<InputStreamResource> getFullDump() throws IOException {
         String filename = LocalDate.now() + FULL_POSTFIX;
-        dumpService.executeFullDump(filename);
+        dumpService.executeQuery(filename, Query.FULL_BACKUP);
 
         return ResponseEntity
                 .ok()
@@ -53,17 +55,30 @@ public class DumpController {
     @GetMapping(path = "diff", produces = MediaType.ALL_VALUE)
     public ResponseEntity<InputStreamResource> getDifferentialDump() throws IOException {
         String filename = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH")) + DIFFERENTIAL_POSTFIX;
-        dumpService.executeDifferentialDump(filename);
+        dumpService.executeQuery(filename, Query.DIFFERENTIAL_BACKUP);
 
         return ResponseEntity
                 .ok()
                 .body(fileStorageService.getDump(filename));
     }
 
+    @GetMapping(path = "file", produces = MediaType.ALL_VALUE)
+    public ResponseEntity<InputStreamResource> getDump(String filename) {
+        try {
+            return ResponseEntity
+                    .ok()
+                    .body(fileStorageService.getDump(filename));
+        } catch (IOException e) {
+            log.error("Error during downloading " + filename + e.getMessage());
+            // todo: исправить!
+            return null;
+        }
+    }
+
     @GetMapping(path = "restore")
     public ResponseEntity<String> restoreFullDump() {
         String filename = LocalDate.now() + FULL_POSTFIX;
-        dumpService.executeRestoreFullDump(filename);
+        dumpService.executeQuery(filename, Query.RESTORE);
 
         return ResponseEntity
                 .ok().body("Full dump restored");
@@ -72,7 +87,7 @@ public class DumpController {
     @GetMapping(path = "restore-diff")
     public ResponseEntity<String> restoreDifferentialDump() {
         String filename = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd_HH")) + DIFFERENTIAL_POSTFIX;
-        dumpService.executeRestoreDifferentialDump(filename);
+        dumpService.executeQuery(filename, Query.RESTORE);
 
         return ResponseEntity
                 .ok().body("Differential dump restored");
@@ -85,25 +100,4 @@ public class DumpController {
                 .body(dumpService.getActualDumpsByDatabaseName(databaseName));
     }
 
-    @GetMapping(path = "start-restoring")
-    public ResponseEntity<List<Dump>> tryRestoreDumps() {
-
-        RestTemplate restTemplate = new RestTemplate();
-        String response = restTemplate.getForObject(url, String.class);
-
-        log.info("Received dump list " + response);
-
-        List<Dump> dumps = null;
-
-        try {
-            dumps = mapper.readValue(response, new TypeReference<List<Dump>>() {
-            });
-        } catch (JsonProcessingException e) {
-            log.error("An error occurred while reading dump list " + e.getMessage());
-        }
-
-        return ResponseEntity
-                .ok()
-                .body(dumps);
-    }
 }

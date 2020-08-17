@@ -13,12 +13,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.dumper.server.enums.Key.*;
@@ -70,38 +71,20 @@ public class DumpServiceImpl implements DumpService {
         }
     }
 
-    @Override
-    public void executeRestoreFullDump(String filename) {
-        Command command = getBaseCommand(filename);
+    public int getVersion() {
+        String version = repository.getVersion();
 
-        setQuery(command, Query.RESTORE);
+        Pattern pattern = Pattern.compile("Server \\d{4}");
+        Matcher matcher = pattern.matcher(version);
 
-        executeCommand(getCommands(command));
+        return matcher.find() ? Integer.parseInt(matcher.group().split(" ")[1]) : -1;
     }
 
-    @Override
-    public void executeRestoreDifferentialDump(String filename) {
+    // todo: попробовать отрефакторить
+    public void executeQuery(String filename, Query query) {
         Command command = getBaseCommand(filename);
 
-        setQuery(command, Query.RESTORE_DIFFERENTIAL);
-
-        executeCommand(getCommands(command));
-    }
-
-    @Override
-    public void executeFullDump(String filename) {
-        Command command = getBaseCommand(filename);
-
-        setQuery(command, Query.BACKUP);
-
-        executeCommand(getCommands(command));
-    }
-
-    @Override
-    public void executeDifferentialDump(String filename) {
-        Command command = getBaseCommand(filename);
-
-        setQuery(command, Query.DIFFERENTIAL_BACKUP);
+        setQuery(command, query);
 
         executeCommand(getCommands(command));
     }
@@ -154,31 +137,34 @@ public class DumpServiceImpl implements DumpService {
 
     @Override
     public List<Dump> getActualDumpsByDatabaseName(String databaseName) {
-        return getFilteredDumps(getDumpsByDate(databaseName));
+        List<Dump> dumps = getDumps(databaseName);
+        log.info("Got dumps: " + Arrays.toString(dumps.toArray()));
+        return getFilteredDumps(dumps);
     }
 
     @Override
-    public List<Dump> getDumpsByDate(String databaseName) {
-        return repository.getDumpsByDatabaseAndDate(databaseName)
+    public List<Dump> getDumps(String databaseName) {
+        return repository.getDumpsByDatabase(databaseName)
                 .stream()
-                .map(d -> new Dump((BigDecimal) d[0],
-                        (BigDecimal) d[1],
-                        (BigDecimal) d[2],
-                        (BigDecimal) d[3],
-                        (String) d[4],
-                        (char) d[5])
-                )
+                .map(d -> Dump.of(d))
                 .sorted(Dump::compareByLastLsn)
                 .collect(Collectors.toList());
     }
 
+    // todo: сделать читаемым
     @Override
     public List<Dump> getFilteredDumps(List<Dump> dumps) {
         List<Dump> result = new ArrayList<>();
 
-        result.add(getFullDump(dumps));
+        Dump fullDump = getFullDump(dumps);
+        if (fullDump != null) {
+            result.add(fullDump);
+        }
         Dump differentialDump = getDifferentialDump(dumps);
-        result.add(differentialDump);
+
+        if (differentialDump != null) {
+            result.add(differentialDump);
+        }
 
         List<Dump> logs = dumps.stream()
                 .filter(d -> d.getType() == Type.L.getName())
@@ -193,7 +179,8 @@ public class DumpServiceImpl implements DumpService {
     public Dump getFullDump(List<Dump> dumps) {
         return dumps.stream()
                 .filter(d -> d.getType() == Type.D.getName())
-                .findAny().orElseGet(null);
+                .findAny()
+                .orElse(null);
     }
 
     @Override
@@ -201,7 +188,7 @@ public class DumpServiceImpl implements DumpService {
         return dumps.stream()
                 .filter(d -> d.getType() == Type.I.getName())
                 .max(Dump::compareByLastLsn)
-                .orElseGet(null);
+                .orElse(null);
     }
 
     @Override
