@@ -17,20 +17,20 @@ public interface BackupsetRepository extends JpaRepository<Backupset, Long> {
                     "             where type = 'D'\n" +
                     "             order by backup_start_date desc)\n" +
                     "\n" +
-                    "select bs.checkpoint_lsn,\n" +
-                    "       bs.database_backup_lsn,\n" +
-                    "       bs.first_lsn,\n" +
+                    "select bs.first_lsn,\n" +
                     "       bs.last_lsn,\n" +
+                    "       bs.checkpoint_lsn,\n" +
+                    "       bs.database_backup_lsn,\n" +
                     "       bm.physical_device_name,\n" +
                     "       bs.type,\n" +
                     "       bs.backup_size,\n" +
                     "       bf.physical_drive,\n" +
                     "       bf.physical_name,\n" +
                     "       bf.file_size\n" +
-                    "from backupset as bs\n" +
-                    "         inner join backupmediafamily as bm on bs.media_set_id = bm.media_set_id\n" +
+                    "from backupmediafamily as bm\n" +
+                    "         inner join backupset as bs on bm.media_set_id = bs.media_set_id\n" +
                     "         inner join backupfile as bf on bs.backup_set_id = bf.backup_set_id\n" +
-                    "where bs.database_name = 'TestDB'\n" +
+                    "where bs.database_name = ?1 and bf.filegroup_name = 'PRIMARY'\n" +
                     "  and (bs.database_backup_lsn = (select lsn from full_dump) or\n" +
                     "       bs.first_lsn = (select lsn from full_dump) or\n" +
                     "       bs.database_backup_lsn = (select backup_lsn from full_dump)\n" +
