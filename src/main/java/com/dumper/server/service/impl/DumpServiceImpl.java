@@ -195,17 +195,17 @@ public class DumpServiceImpl implements DumpService {
     public List<Dump> getFilteredTransactionalLog(List<Dump> logs) {
         List<Dump> result = new ArrayList<>();
 
-        if(logs.isEmpty()) {
+        if (logs.isEmpty()) {
             return result;
         }
 
         result.add(logs.get(0));
 
-        logs.stream().forEach(l -> {
-            if (result.get(result.size() - 1).equalsLastLsnToFirst(l)) {
-                result.add(l);
+        for (Dump dump : logs) {
+            if (result.get(result.size() - 1).equalsLastLsnToFirst(dump)) {
+                result.add(dump);
             }
-        });
+        }
 
         return result;
     }
