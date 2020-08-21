@@ -1,6 +1,7 @@
 package com.dumper.server.service.impl;
 
 import com.dumper.server.entity.Dump;
+import com.dumper.server.entity.ShortDump;
 import com.dumper.server.enums.Type;
 import com.dumper.server.enums.Query;
 import com.dumper.server.repository.BackupsetRepository;
@@ -24,8 +25,6 @@ import java.util.stream.Collectors;
 
 import static com.dumper.server.enums.Key.*;
 
-// todo: убрать ссылку после ознакомления
-// https://docs.microsoft.com/ru-ru/sql/t-sql/statements/backup-transact-sql?view=sql-server-ver15
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -137,7 +136,9 @@ public class DumpServiceImpl implements DumpService {
     @Override
     public List<Dump> getActualDumpsByDatabaseName(String databaseName) {
         List<Dump> dumps = getDumps(databaseName);
-        log.info("Got dumps: " + Arrays.toString(dumps.toArray()));
+        log.info("Got dumps: ");
+        dumps.stream().map(d -> "" + ShortDump.of(d)).forEach(x -> log.info("" + x));
+
         return getFilteredDumps(dumps);
     }
 
@@ -146,32 +147,31 @@ public class DumpServiceImpl implements DumpService {
         return repository.getDumpsByDatabase(databaseName)
                 .stream()
                 .map(d -> Dump.of(d))
-                .sorted(Dump::compareByLastLsn)
+                .sorted(Dump::compareByFirstLsn)
                 .collect(Collectors.toList());
     }
 
-    // todo: сделать читаемым
     @Override
     public List<Dump> getFilteredDumps(List<Dump> dumps) {
         List<Dump> result = new ArrayList<>();
 
         Dump fullDump = getFullDump(dumps);
-        if (fullDump != null) {
-            result.add(fullDump);
-        }
-        Dump differentialDump = getDifferentialDump(dumps);
-
-        if (differentialDump != null) {
-            result.add(differentialDump);
-        }
+        result.add(fullDump);
 
         List<Dump> logs = dumps.stream()
                 .filter(d -> d.getType() == Type.L.getName())
                 .collect(Collectors.toList());
 
-        result.addAll(getFilteredTransactionalLog(logs, differentialDump));
+        Dump differentialDump = getDifferentialDump(dumps);
+        if (differentialDump != null) {
+            result.add(differentialDump);
+            if (logs.size() > 0) {
+                result.addAll(getFilteredTransactionalLog(logs));
+            }
+        }
 
-        log.info("Received filtered dumps: " + Arrays.toString(result.toArray()));
+        log.info("Received filtered dumps: ");
+        result.stream().map(d -> "" + ShortDump.of(d)).forEach(x -> log.info("" + x));
         return result;
     }
 
@@ -179,7 +179,7 @@ public class DumpServiceImpl implements DumpService {
     public Dump getFullDump(List<Dump> dumps) {
         return dumps.stream()
                 .filter(d -> d.getType() == Type.D.getName())
-                .findAny()
+                .max(Dump::compareByFirstLsn)
                 .orElse(null);
     }
 
@@ -187,31 +187,26 @@ public class DumpServiceImpl implements DumpService {
     public Dump getDifferentialDump(List<Dump> dumps) {
         return dumps.stream()
                 .filter(d -> d.getType() == Type.I.getName())
-                .max(Dump::compareByLastLsn)
+                .max(Dump::compareByFirstLsn)
                 .orElse(null);
     }
 
     @Override
-    public List<Dump> getFilteredTransactionalLog(List<Dump> logs, Dump differentialDump) {
+    public List<Dump> getFilteredTransactionalLog(List<Dump> logs) {
         List<Dump> result = new ArrayList<>();
 
-        if (differentialDump != null && logs.size() > 1) {
-            // todo: подумать можно ли сделать лучше и вопрос гарантии порядка после фильтрации и
-            //  переписать так чтобы не требовалась проверка на null
-            for (int i = 0; i < logs.size(); i++) {
-                if (isCorrectPrevChainToNextByI(logs, i)) {
-                    result.add(logs.get(i));
-                }
-            }
+        if(logs.isEmpty()) {
+            return result;
         }
+
+        result.add(logs.get(0));
+
+        logs.stream().forEach(l -> {
+            if (result.get(result.size() - 1).equalsLastLsnToFirst(l)) {
+                result.add(l);
+            }
+        });
 
         return result;
     }
-
-    @Override
-    public boolean isCorrectPrevChainToNextByI(List<Dump> logs, int i) {
-        return i < logs.size() - 1 && logs.get(i).getLastLsn().equals(logs.get(i + 1).getFirstLsn()) ||
-                i == logs.size() - 1 && logs.get(i).getFirstLsn().equals(logs.get(i - 1).getLastLsn());
-    }
-
 }
