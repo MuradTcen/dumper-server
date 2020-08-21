@@ -15,6 +15,10 @@ public class Dump {
     private BigDecimal databaseBackupLsn;
     private String filename;
     private char type;
+    private BigDecimal backupSize;
+    private String physicalDrive;
+    private String physicalName;
+    private BigDecimal fileSize;
 
     public int compareByLastLsn(Dump another) {
         return lastLsn.compareTo(another.getLastLsn());
@@ -27,7 +31,11 @@ public class Dump {
                 (BigDecimal) object[2],
                 (BigDecimal) object[3],
                 (String) object[4],
-                (char) object[5]);
+                (char) object[5],
+                (BigDecimal) object[6],
+                (String) object[7],
+                (String) object[8],
+                (BigDecimal) object[9]);
     }
 
 }
