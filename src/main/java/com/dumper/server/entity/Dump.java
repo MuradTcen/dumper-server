@@ -20,8 +20,12 @@ public class Dump {
     private String physicalName;
     private BigDecimal fileSize;
 
-    public int compareByLastLsn(Dump another) {
-        return lastLsn.compareTo(another.getLastLsn());
+    public int compareByFirstLsn(Dump another) {
+        return firstLsn.compareTo(another.getFirstLsn());
+    }
+
+    public boolean equalsLastLsnToFirst(Dump next) {
+        return lastLsn.compareTo(next.getFirstLsn()) == 0;
     }
 
     public static Dump of(Object[] object) {
