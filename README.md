@@ -50,3 +50,7 @@ go
 ```
 
 Путь к бэкапам в application.properties переменная ```directory```
+
+Пример запроса, который успешно завершился:
+
+[![imageup.ru](https://imageup.ru/img248/3645699/otvetvsluchaeuspexa.png)](https://imageup.ru/img248/3645699/otvetvsluchaeuspexa.png.html)
