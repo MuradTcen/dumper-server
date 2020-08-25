@@ -136,6 +136,7 @@ public class DumpServiceImpl implements DumpService {
     @Override
     public List<Dump> getActualDumpsByDatabaseName(String databaseName) {
         List<Dump> dumps = getDumps(databaseName);
+        if(dumps.isEmpty()) return dumps;
         log.info("Got dumps: ");
         dumps.stream().map(d -> "" + ShortDump.of(d)).forEach(x -> log.info("" + x));
 
@@ -170,7 +171,7 @@ public class DumpServiceImpl implements DumpService {
             }
         }
 
-        log.info("Received filtered dumps: ");
+        log.info(String.format("Received %s filtered dumps: ", result.size()));
         result.stream().map(d -> "" + ShortDump.of(d)).forEach(x -> log.info("" + x));
         return result;
     }
