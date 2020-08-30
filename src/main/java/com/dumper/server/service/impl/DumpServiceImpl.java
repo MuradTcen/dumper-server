@@ -24,8 +24,8 @@ public class DumpServiceImpl implements DumpService {
     private final DumpDaoImpl dao;
 
     /**
-     *
-     * @return
+     * ПОлучение года версии ms sql
+     * @return год версии
      */
     @Override
     public int getVersion() {
@@ -38,12 +38,13 @@ public class DumpServiceImpl implements DumpService {
     }
 
     /**
-     *
-     * @param databaseName
-     * @return
+     * Получение списка актуальных дампов
+     * @param databaseName название БД
+     * @param dateString дата вида ГГГГ-ММ-ДД актуальности дампов
+     * @return отфильтрованный список дампов относительно даты актуальности
      */
     @Override
-    public List<Dump> getActualDumpsByDatabaseName(String databaseName, String dateString) {
+    public List<Dump> getActualDumpsByDatabaseNameAndDate(String databaseName, String dateString) {
         LocalDate date = LocalDate.parse(dateString);
         List<Dump> dumps = getDumps(databaseName, date);
         if (dumps.isEmpty()) return dumps;
@@ -54,14 +55,15 @@ public class DumpServiceImpl implements DumpService {
     }
 
     /**
-     *
-     * @param databaseName
-     * @return
+     * Получения списка дампов
+     * @param databaseName название БД
+     * @param date дата актуальности
+     * @return список дампов относительно даты актуальности
      */
     @Override
     public List<Dump> getDumps(String databaseName, LocalDate date) {
         log.info(String.format("Getting dumps for database %s and date %s", databaseName, date.toString()));
-        return dao.getDumpsByDatabase(databaseName, date)
+        return dao.getDumpsByDatabaseAndDate(databaseName, date)
                 .stream()
                 .map(d -> Dump.of(d))
                 .sorted(Dump::compareByFirstLsn)

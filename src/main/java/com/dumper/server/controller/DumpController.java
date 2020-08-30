@@ -54,7 +54,7 @@ public class DumpController {
         }
         return ResponseEntity
                 .ok()
-                .body(dumpService.getActualDumpsByDatabaseName(databaseName, date));
+                .body(dumpService.getActualDumpsByDatabaseNameAndDate(databaseName, date));
     }
 
 }

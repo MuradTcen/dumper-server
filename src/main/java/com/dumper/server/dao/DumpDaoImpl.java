@@ -15,12 +15,12 @@ public class DumpDaoImpl implements DumpDao {
     @PersistenceContext
     private EntityManager entityManager;
 
-    /**
-     * @param databaseName
-     * @return
+    /** Получение актуального списка дампов
+     * @param databaseName название БД
+     * @return массив объектов результата запроса
      */
     @Override
-    public List<Object[]> getDumpsByDatabase(String databaseName, LocalDate date) {
+    public List<Object[]> getDumpsByDatabaseAndDate(String databaseName, LocalDate date) {
         String query = "with full_dump (lsn, backup_lsn, date)\n" +
                 "         as (select top 1 b.first_lsn, b.database_backup_lsn, b.backup_start_date\n" +
                 "             from backupset as b\n" +
@@ -55,8 +55,8 @@ public class DumpDaoImpl implements DumpDao {
                 .getResultList();
     }
 
-    /**
-     * @return
+    /** Запрос года версии
+     * @return год версии
      */
     @Override
     public String getVersion() {

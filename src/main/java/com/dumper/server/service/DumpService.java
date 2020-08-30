@@ -8,7 +8,7 @@ import java.util.List;
 public interface DumpService {
     int getVersion();
 
-    List<Dump> getActualDumpsByDatabaseName(String databaseName, String dateString);
+    List<Dump> getActualDumpsByDatabaseNameAndDate(String databaseName, String dateString);
 
     List<Dump> getDumps(String databaseName, LocalDate date);
 }
