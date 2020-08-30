@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 
 @Data
 @AllArgsConstructor
@@ -19,6 +21,7 @@ public class Dump {
     private String physicalDrive;
     private String physicalName;
     private BigDecimal fileSize;
+    private LocalDate date;
 
     public int compareByFirstLsn(Dump another) {
         return firstLsn.compareTo(another.getFirstLsn());
@@ -39,7 +42,8 @@ public class Dump {
                 (BigDecimal) object[6],
                 (String) object[7],
                 (String) object[8],
-                (BigDecimal) object[9]);
+                (BigDecimal) object[9],
+                ((Timestamp) object[10]).toLocalDateTime().toLocalDate());
     }
 
 }
