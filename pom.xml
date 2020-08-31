@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.dumper</groupId>
-	<artifactId>server</artifactId>
+	<artifactId>dumper-server</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>server</name>
-	<description>Server for creating dump</description>
+	<name>dumper-server</name>
+	<description>Server for supplying dumps</description>
 
 	<properties>
 		<java.version>1.8</java.version>
